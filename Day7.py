@@ -3,6 +3,7 @@ from __future__ import annotations
 from utils import read_file
 from typing import List, Tuple, Union
 
+from collections import defaultdict
 from functools import lru_cache
 
 
@@ -79,15 +80,26 @@ class Graph:
             self._build_graph(child)
 
     @lru_cache
-    def count_paths(self, node: GraphNode) -> int:
+    def count_paths_dfs(self, node: GraphNode) -> int:
         if node.id[0] == self.shape[0] - 1:
             return 1
 
         total = 0
         for child in node.children:
-            total += self.count_paths(child)
+            total += self.count_paths_dfs(child)
 
         return total
+
+    def count_paths_bfs(self) -> int:
+        level, parent_levels, child_levels = 0, {self.root: 1}, defaultdict(int)
+        while level < self.shape[0] - 1:
+            level += 1
+            for node in parent_levels:
+                for child in node.children:
+                    child_levels[child] += parent_levels[node]
+            parent_levels = child_levels
+            child_levels = defaultdict(int)
+        return sum(parent_levels.values())
 
 
 if __name__ == '__main__':
@@ -99,4 +111,6 @@ if __name__ == '__main__':
     print(f"The answer to Part 1 is {manifold.splits}.")
 
     graph = Graph(data)
-    print(f"The answer to Part 2 is {graph.count_paths(graph.root)}.")
+    print(f"The answer to Part 2 using DFS is {graph.count_paths_dfs(graph.root)}.")
+
+    print(f"The answer to Part 2 using BFS is {graph.count_paths_bfs()}.")
