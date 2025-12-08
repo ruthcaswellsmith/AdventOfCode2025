@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from utils import read_file, XYZ
 from typing import List
-import heapq
 
 import numpy as np
 
@@ -22,19 +21,21 @@ class Circuits:
         distances = []
         for i, j1 in enumerate(self.junction_boxes):
             for j2 in self.junction_boxes[i + 1:]:
-                heapq.heappush(distances, (j1.euclidean(j2), j1.id, j2.id))
+                distances.append((j1.euclidean(j2), j1.id, j2.id))
+        distances.sort(key=lambda x: x[0])
         return distances
 
     def process_pt1(self, n: int):
         while self.connections < n:
+            dist, j1, j2 = self.distances[self.connections]
             self.connections += 1
-            dist, j1, j2 = heapq.heappop(self.distances)
             self.connect_boxes(j1, j2)
         return np.prod(circuits.circuits_by_length[:3])
 
     def process_pt2(self):
         while len(self.junction_boxes) > 0:
-            dist, j1, j2 = heapq.heappop(self.distances)
+            dist, j1, j2 = self.distances[self.connections]
+            self.connections += 1
             self.connect_boxes(j1, j2)
         return int(j1.split('-')[0]) * int(j2.split('-')[0])
 
