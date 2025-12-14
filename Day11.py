@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import List
 from enum import Enum
+from functools import lru_cache
 
 from utils import read_file
 
@@ -58,20 +59,14 @@ class Devices:
     def clear_cache(self):
         self.cache = {}
 
-    def find_paths(self, node: str, path: List[str], visited: set):
+    @lru_cache
+    def find_paths(self, node: str, path: List[str]):
         if node == "out":
             return PathCounts().update('out')
 
-        if node in self.cache:
-            return self.cache[node]
-
-        visited.add(node)
-
         path_counts = sum([
-            self.find_paths(c, path + [c], visited.copy()) for c in self.devices[node] if c not in visited
-        ], PathCounts())
+            self.find_paths(c, path + [c]) for c in self.devices[node]], PathCounts())
 
-        visited.remove(node)
         path_counts = path_counts.update(node)
         self.cache[node] = path_counts
 
@@ -83,9 +78,9 @@ if __name__ == '__main__':
     data = read_file(filename)
 
     devices = Devices(data)
-    res = devices.find_paths('you', [], set())
+    res = devices.find_paths('you', [])
     print(f"The answer to Part 1 is {res.total_paths}.")
 
     devices.clear_cache()
-    res = devices.find_paths('svr', [], set())
+    res = devices.find_paths('svr', [])
     print(f"The answer to Part 2 is {res.total_paths_with_dac_and_fft}.")
